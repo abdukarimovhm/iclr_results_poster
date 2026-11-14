@@ -287,66 +287,88 @@ def masthead(c: Canvas) -> float:
     return base
 
 
+class Grid:
+    def __init__(self, cell: float = 120) -> None:
+        self.cell = cell
+        self.boxes: dict = {}
+
+    def cells(self, box: tuple) -> list:
+        return [(i, j) for i in range(int(box[0] // self.cell), int(box[2] // self.cell) + 1) for j in range(int(box[1] // self.cell), int(box[3] // self.cell) + 1)]
+
+    def hit(self, box: tuple, skip: object = None) -> bool:
+        for cell in self.cells(box):
+            for other, owner in self.boxes.get(cell, []):
+                if (skip is None or owner != skip) and box[0] < other[2] and box[2] > other[0] and box[1] < other[3] and box[3] > other[1]:
+                    return True
+        return False
+
+    def add(self, box: tuple, owner: object = None) -> None:
+        for cell in self.cells(box):
+            self.boxes.setdefault(cell, []).append((box, owner))
+
+
+def octave(w: float) -> str:
+    return f"{w:g}" if w >= 1 else f"1/{round(1 / w)}"
+
+
 def funnel(c: Canvas, colours: dict, ranks: dict, box: tuple) -> None:
     x0, y0, x1, y1 = box
-    units = [u for u in STATS["institutions"] if u["weight"] >= RANKED]
-    lo = 2 ** math.floor(math.log2(min(u["weight"] for u in units)))
+    units = sorted([u for u in STATS["institutions"] if u["weight"] >= 1], key=lambda u: -u["weight"])
+    lo = 1
     hi = 2 ** math.ceil(math.log2(max(u["weight"] for u in units)))
-    means = [u["mean"] for u in units]
-    bottom = max(math.floor((min(means) - 0.02) * 10) / 10, math.floor((MEAN - 0.6) * 10) / 10)
-    top = min(math.ceil((max(means) + 0.02) * 10) / 10, math.ceil((MEAN + 0.6) * 10) / 10)
+    bottom = math.floor(min(u["mean"] for u in units) * 5) / 5
+    top = math.ceil(max(u["mean"] for u in units) * 5) / 5
 
     def px(w: float) -> float:
         return x0 + (math.log2(w) - math.log2(lo)) / (math.log2(hi) - math.log2(lo)) * (x1 - x0)
 
     def py(m: float) -> float:
-        return y1 - (min(max(m, bottom), top) - bottom) / (top - bottom) * (y1 - y0)
+        return y1 - (m - bottom) / (top - bottom) * (y1 - y0)
 
-    for k in range(int(round((top - bottom) * 10)) + 1):
-        value = bottom + k / 10
+    for k in range(int(round((top - bottom) * 5)) + 1):
+        value = bottom + k / 5
         c.line(x0, py(value), x1, py(value), GRID, 2)
         c.text(x0 - 20, py(value) + 34 * CAP / 2, f"{value:.1f}", 34, 400, anchor="end", fill=GREY)
     w = lo
     while w <= hi:
         c.line(px(w), y0, px(w), y1, GRID, 2)
-        c.text(px(w), y1 + 52, f"{w:g}", 34, 400, anchor="middle", fill=GREY)
+        c.text(px(w), y1 + 52, octave(w), 34, 400, anchor="middle", fill=GREY)
         w *= 2
     c.text(x1, y1 + 112, "Submissions", 40, 500, anchor="end")
     c.text(L, y0 - 44, "Score", 40, 500)
-    steps = [lo * (hi / lo) ** (k / 240) for k in range(241)]
+    steps = [lo * (hi / lo) ** (k / 400) for k in range(401)]
     for sign in (1, -1):
         c.path([(px(n), py(MEAN + sign * 1.96 * SD / math.sqrt(n))) for n in steps if bottom <= MEAN + sign * 1.96 * SD / math.sqrt(n) <= top], QUIET, 3, "14 10")
     c.line(x0, py(MEAN), x1, py(MEAN), QUIET, 3)
-    c.text(x0 + 12, py(MEAN) - 16, f"Mean {MEAN:.2f}", 34, 500, fill=GREY)
-    dots = sorted(units, key=lambda u: -u["weight"])
-    for u in dots:
-        c.circle(px(u["weight"]), py(u["mean"]), radius(u["weight"]), colours.get(u["country"], NOBODY), "#ffffff", 1.5, 0.9)
-    big = [(px(u["weight"]), py(u["mean"]), radius(u["weight"])) for u in dots if radius(u["weight"]) >= 14]
-    z = {u["institution"]: (u["mean"] - MEAN) / (SD / math.sqrt(u["weight"])) for u in units}
-    chosen = dots[:48]
-    extremes = sorted([u for u in units if u not in chosen and u["weight"] >= 16], key=lambda u: -abs(z[u["institution"]]))[:12]
+    c.text(x1 - 12, py(MEAN) + 46, f"Mean {MEAN:.2f}", 34, 500, anchor="end", fill=GREY)
+    dots = Grid()
+    for u in units:
+        r = max(3, radius(u["weight"]))
+        c.circle(px(u["weight"]), py(u["mean"]), r, colours.get(u["country"], NOBODY), "#ffffff", 1.2 if r > 4 else 0.6, 0.9)
+        if r >= 6:
+            dots.add((px(u["weight"]) - r, py(u["mean"]) - r, px(u["weight"]) + r, py(u["mean"]) + r), u["institution"])
     angles = [0, 180]
     for step in range(15, 91, 15):
         angles += [360 - step, step, 180 + step, 180 - step]
-    placed = []
-    for u in chosen + extremes:
-        cx, cy, r = px(u["weight"]), py(u["mean"]), radius(u["weight"])
-        size = max(26, min(58, 22 + 7 * math.log2(max(u["weight"], 1))))
-        rank = str(ranks.get(u["institution"], ""))
-        width = measure(rank + " ", size * 0.86, "cond", 400) + measure(u["name"], size, "cond", 500)
+    labels = Grid()
+    for u in units:
+        cx, cy, r = px(u["weight"]), py(u["mean"]), max(3, radius(u["weight"]))
+        size = max(12, min(52, 16 + 6.5 * math.log2(u["weight"])))
+        rank = ranks.get(u["institution"])
+        parts = ([(f"{rank} ", size * 0.86, 400, "cond", QUIET)] if rank else []) + [(u["name"], size, 500, "cond", INK)]
+        width = sum(measure(t, z, f, wt) for t, z, wt, f, _ in parts)
+        reach = (0, 30, 60, 100, 150, 210, 280, 360, 450, 560, 680) if u["weight"] >= RANKED else (0, 16, 36, 64, 100, 150, 220, 300) if u["weight"] >= 2 else (0, 10, 24, 44, 70)
         best = None
-        for distance in (0, 30, 60, 100, 150, 210, 280, 360, 450, 560, 680):
+        for distance in reach:
             for angle in angles:
                 a = math.radians(angle)
-                ax, ay = cx + (r + 10 + distance) * math.cos(a), cy + (r + 10 + distance) * math.sin(a)
+                ax, ay = cx + (r + 8 + distance) * math.cos(a), cy + (r + 8 + distance) * math.sin(a)
                 lx = ax if math.cos(a) >= -0.2 else ax - width
                 ly = ay + size * CAP / 2
-                boxed = (lx - 6, ly - size * 0.95, lx + width + 6, ly + size * 0.3)
+                boxed = (lx - 4, ly - size * 0.92, lx + width + 4, ly + size * 0.25)
                 if boxed[0] < x0 or boxed[2] > x1 or boxed[1] < y0 or boxed[3] > y1:
                     continue
-                if any(not (boxed[2] < p[0] or boxed[0] > p[2] or boxed[3] < p[1] or boxed[1] > p[3]) for p in placed):
-                    continue
-                if any(not (boxed[2] < bx - br or boxed[0] > bx + br or boxed[3] < by - br or boxed[1] > by + br) for bx, by, br in big if (bx, by) != (cx, cy)):
+                if labels.hit(boxed) or dots.hit(boxed, u["institution"]):
                     continue
                 best = (lx, ly, boxed, distance, ax, ay)
                 break
@@ -355,11 +377,11 @@ def funnel(c: Canvas, colours: dict, ranks: dict, box: tuple) -> None:
         if not best:
             continue
         lx, ly, boxed, distance, ax, ay = best
-        placed.append(boxed)
-        if distance > 0:
+        labels.add(boxed)
+        if distance > 12:
             norm = max(math.hypot(ax - cx, ay - cy), 1)
-            c.line(cx + r * (ax - cx) / norm, cy + r * (ay - cy) / norm, ax, ay, colours.get(u["country"], NOBODY), 2)
-        c.runs(lx, ly, [(rank + " ", size * 0.86, 400, "cond", QUIET), (u["name"], size, 500, "cond", INK)])
+            c.line(cx + r * (ax - cx) / norm, cy + r * (ay - cy) / norm, ax, ay, colours.get(u["country"], NOBODY), 2 if u["weight"] >= 2 else 1)
+        c.runs(lx, ly, parts)
 
 
 def heading(c: Canvas, x0: float, x1: float, y: float, title: str, note: str = "") -> float:
@@ -560,11 +582,16 @@ def build(hidden: set) -> Canvas:
 
 
 def render(svg: pathlib.Path, png: pathlib.Path) -> None:
-    subprocess.run(
-        ["chromium", "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", f"--window-size={W},{H}", "--run-all-compositor-stages-before-draw", "--virtual-time-budget=120000", f"--screenshot={png}", svg.as_uri()],
-        check=True,
-        capture_output=True,
-    )
+    for budget in (600000, 1200000, 2400000, 4800000):
+        subprocess.run(
+            ["chromium", "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", f"--window-size={W},{H}", "--run-all-compositor-stages-before-draw", f"--virtual-time-budget={budget}", f"--screenshot={png}", svg.as_uri()],
+            check=True,
+            capture_output=True,
+        )
+        image = Image.open(png).convert("RGB")
+        if min(image.getpixel((R - 10, BOTTOM + k))[0] for k in range(-2, 3)) < 80 and image.getpixel((L + 10, BOTTOM - 20)) != (255, 255, 255):
+            return
+    raise RuntimeError(f"incomplete render of {svg.name}")
 
 
 def main() -> None:
