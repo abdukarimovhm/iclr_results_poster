@@ -165,9 +165,10 @@ class Canvas:
         track = f' letter-spacing="{spacing:.1f}"' if spacing else ""
         self.add(f'<text x="{x:.1f}" y="{y:.1f}" font-family="{FALLBACK[family]}" font-size="{size:.1f}" font-weight="{weight}" text-anchor="{anchor}" fill="{fill}"{track}>{escape(s)}</text>')
 
-    def runs(self, x: float, y: float, parts: list, anchor: str = "start") -> None:
+    def runs(self, x: float, y: float, parts: list, anchor: str = "start", halo: float = 0) -> None:
         spans = "".join(f'<tspan font-family="{FALLBACK[f]}" font-size="{s:.1f}" font-weight="{w}" fill="{c}">{escape(t)}</tspan>' for t, s, w, f, c in parts)
-        self.add(f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}">{spans}</text>')
+        mask = f' stroke="#ffffff" stroke-width="{halo:.1f}" stroke-linejoin="round" paint-order="stroke"' if halo else ""
+        self.add(f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}"{mask}>{spans}</text>')
 
     def flag(self, code: str, x: float, baseline: float, size: float) -> float:
         if code in self.hidden:
@@ -350,7 +351,7 @@ def funnel(c: Canvas, colours: dict, ranks: dict, box: tuple) -> None:
     angles = [0, 180]
     for step in range(15, 91, 15):
         angles += [360 - step, step, 180 + step, 180 - step]
-    labels = Grid()
+    labels, texts = Grid(), []
     for u in units:
         cx, cy, r = px(u["weight"]), py(u["mean"]), max(3, radius(u["weight"]))
         size = max(12, min(52, 16 + 6.5 * math.log2(u["weight"])))
@@ -381,7 +382,9 @@ def funnel(c: Canvas, colours: dict, ranks: dict, box: tuple) -> None:
         if distance > 12:
             norm = max(math.hypot(ax - cx, ay - cy), 1)
             c.line(cx + r * (ax - cx) / norm, cy + r * (ay - cy) / norm, ax, ay, colours.get(u["country"], NOBODY), 2 if u["weight"] >= 2 else 1)
-        c.runs(lx, ly, parts)
+        texts.append((lx, ly, parts, size))
+    for lx, ly, parts, size in texts:
+        c.runs(lx, ly, parts, halo=size * 0.2)
 
 
 def heading(c: Canvas, x0: float, x1: float, y: float, title: str, note: str = "") -> float:
