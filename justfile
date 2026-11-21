@@ -12,3 +12,7 @@ iclr2027-institutions-fetch stamp="2026-11-06":
 iclr2027-institutions stamp="2026-11-06":
     uv run python iclr2027-institutions/stats.py --stamp {{stamp}}
     uv run python iclr2027-institutions/poster.py
+
+iclr2027-rebuttal before="2026-11-06" after="2026-11-19":
+    uv run python iclr2027-rebuttal/stats.py --before {{before}} --after {{after}}
+    uv run python iclr2027-rebuttal/poster.py
