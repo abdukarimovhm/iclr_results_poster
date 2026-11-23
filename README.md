@@ -1,8 +1,11 @@
 # ICLR 2027 results posters + my analysis
 
 Three posters on ICLR 2027 reviews (scores, institutions, rebuttal), plus my own analysis of the rebuttal phase in
-[`analysis/`](analysis/). The posters are rendered by me; their code and summary tables are adapted from
-[clareLab/posters](https://github.com/clareLab/posters) under the MIT license (both copyright notices are in [LICENSE](LICENSE)).
+[`analysis/`](analysis/). The posters are my own design and code ([`posters/`](posters/)). The data pipelines that produced
+the summary tables (`stats.json`, CSVs) are adapted from [clareLab/posters](https://github.com/clareLab/posters) under the
+MIT license; both copyright notices are in [LICENSE](LICENSE).
+
+Each poster comes as a print-size PNG (4800 px wide) and a PDF in [`posters/out/`](posters/out/).
 
 - [ICLR 2027 posters](#iclr-2027-posters)
 - [My analysis of the rebuttal phase](#my-analysis-of-the-rebuttal-phase)
@@ -11,19 +14,19 @@ Three posters on ICLR 2027 reviews (scores, institutions, rebuttal), plus my own
 
 ## ICLR 2027 posters
 
-All three are built from OpenReview (reviews) and OpenAlex (author affiliations). ICLR 2027 reviews use a 1–4 rating scale.
+All three use OpenReview (reviews) and OpenAlex (author affiliations). ICLR 2027 reviews use a 1–4 rating scale.
 
-### Review scores ([`iclr2027-scores/`](iclr2027-scores/))
+### Review scores ([`posters/scores.py`](posters/scores.py))
 
 - **40,544** submissions under review with **125,304** reviews.
 - Mean of per-paper average ratings: **2.06**; median **2.0**.
 - Ratings given: 1 → 23,782 · 2 → 72,006 · 3 → 27,624 · 4 → 1,892. Almost 3 in 5 reviews were a 2.
-- Only **37.9%** of papers average above 2.33, **15.1%** above 2.67 and **4.1%** at 3.0 or more.
+- Only **37.9%** of papers average 2.33 or more, **15.1%** 2.67 or more and **4.1%** 3.00 or more.
 - By primary area, average scores range from **1.92** (interpretability) to **2.16** (generative models).
 
-![ICLR 2027 scores poster](iclr2027-scores/iclr2027-scores-poster.png)
+![ICLR 2027 scores poster](posters/out/iclr2027-scores.png)
 
-### Institutions ([`iclr2027-institutions/`](iclr2027-institutions/))
+### Institutions ([`posters/institutions.py`](posters/institutions.py))
 
 Covers the 10,520 papers that could be matched to a preprint posted before reviews were released. Each paper is split fractionally across
 its authors and their affiliations: **74 countries** and **1,884 institutions**. These papers score higher than the rest
@@ -35,9 +38,9 @@ its authors and their affiliations: **74 countries** and **1,884 institutions**.
 - Among the top countries, South Korea (2.26) and Germany (2.23) have the highest average initial score; China and the US are both about 2.18.
 - Universities supply 83% of the matched submissions; companies 10%, and company papers score a little higher (2.23 vs 2.18).
 
-![ICLR 2027 institutions poster](iclr2027-institutions/iclr2027-institutions.png)
+![ICLR 2027 institutions poster](posters/out/iclr2027-institutions.png)
 
-### Rebuttal ([`iclr2027-rebuttal/`](iclr2027-rebuttal/))
+### Rebuttal ([`posters/rebuttal.py`](posters/rebuttal.py))
 
 Compares a snapshot taken when reviews came out (2026-11-06) with one taken after the discussion period (2026-11-19).
 
@@ -46,7 +49,7 @@ Compares a snapshot taken when reviews came out (2026-11-06) with one taken afte
 - **75.5%** of open papers had an author response; authors posted **265,321** comments, reviewers **54,690**.
 - Median score went from **2.0** to **2.33**.
 
-![ICLR 2027 rebuttal poster](iclr2027-rebuttal/iclr2027-rebuttal.png)
+![ICLR 2027 rebuttal poster](posters/out/iclr2027-rebuttal.png)
 
 ## My analysis of the rebuttal phase
 
@@ -88,7 +91,8 @@ so it runs without the raw OpenReview data. All findings are in [`analysis/findi
 
 | Folder | What it is |
 |---|---|
-| `iclr2027-scores/`, `iclr2027-institutions/`, `iclr2027-rebuttal/` | The three posters: fetch, stats and poster scripts, summary CSV/JSON tables, PNG/SVG output |
+| `posters/` | My poster code: `style.py` (shared look), `scores.py`, `institutions.py`, `rebuttal.py`; output in `posters/out/` |
+| `iclr2027-scores/`, `iclr2027-institutions/`, `iclr2027-rebuttal/` | Data pipelines (fetch and stats scripts) and the summary CSV/JSON tables the posters read |
 | `analysis/` | My analysis script, its charts and findings |
 
 ## Running things
@@ -99,12 +103,13 @@ Set up once:
 python3 -m venv .venv && .venv/bin/pip install pandas numpy matplotlib scipy pillow segno pyarrow rapidfuzz
 ```
 
-Re-render the posters from the committed `stats.json` files (needs Google Chrome or Chromium installed; no API keys):
+Render the posters from the committed `stats.json` files (needs Google Chrome or Chromium, and internet for the
+Plus Jakarta Sans font; no API keys). Each takes under a minute:
 
 ```bash
-.venv/bin/python iclr2027-scores/poster.py
-.venv/bin/python iclr2027-institutions/poster.py
-.venv/bin/python iclr2027-rebuttal/poster.py
+.venv/bin/python posters/scores.py
+.venv/bin/python posters/institutions.py
+.venv/bin/python posters/rebuttal.py
 ```
 
 Run my analysis:
