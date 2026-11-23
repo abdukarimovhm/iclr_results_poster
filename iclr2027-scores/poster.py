@@ -1,10 +1,12 @@
 import json
 import pathlib
+import shutil
 import subprocess
 
 from PIL import ImageFont
 
 HERE = pathlib.Path(__file__).parent
+BROWSER = shutil.which("chromium") or shutil.which("google-chrome") or "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 STATS = json.loads((HERE / "stats.json").read_text())
 NAME = "iclr2027-scores-poster"
 
@@ -27,7 +29,10 @@ LOADED = {}
 def measure(text: str, size: float, family: str = "sans", weight: str = "normal") -> float:
     key = (family, weight)
     if key not in LOADED:
-        file = subprocess.run(["fc-match", "-f", "%{file}", PATTERNS[key]], check=True, capture_output=True, text=True).stdout
+        if shutil.which("fc-match"):
+            file = subprocess.run(["fc-match", "-f", "%{file}", PATTERNS[key]], check=True, capture_output=True, text=True).stdout
+        else:
+            file = f"/System/Library/Fonts/Supplemental/{PATTERNS[key].replace(':bold', ' Bold')}.ttf"
         LOADED[key] = ImageFont.truetype(file, 1000)
     return LOADED[key].getlength(text) * size / 1000
 
@@ -99,7 +104,7 @@ class Canvas:
 def header(c: Canvas) -> None:
     c.text(L, 120, "ICLR 2027 Review Scores", 250, "bold", baseline="text-before-edge")
     c.text(L, 440, "Initial ratings at review release, overall and by primary area", 80, "bold", baseline="text-before-edge")
-    block = [("Author:", "clareLab", INK), ("Contact:", "https://clarelab.moe", BLUE), ("Date:", "Nov 6, 2026", INK), ("Data:", "OpenReview, Nov 6, 2026", INK)]
+    block = [("Author:", "abdukarimovhm", INK), ("Contact:", "https://github.com/abdukarimovhm", BLUE), ("Date:", "Nov 24, 2026", INK), ("Data:", "OpenReview, Nov 6, 2026", INK)]
     x = R - max(measure(v, 46) for _, v, _ in block)
     for i, (k, v, colour) in enumerate(block):
         y = 160 + i * 62
@@ -314,7 +319,7 @@ def main() -> None:
     svg = HERE / f"{NAME}.svg"
     c.save(svg)
     subprocess.run(
-        ["chromium", "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", "--window-size=7200,9600", "--run-all-compositor-stages-before-draw", "--virtual-time-budget=30000", f"--screenshot={HERE / (NAME + '.png')}", svg.as_uri()],
+        [BROWSER, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", "--window-size=7200,9600", "--run-all-compositor-stages-before-draw", "--virtual-time-budget=30000", f"--screenshot={HERE / (NAME + '.png')}", svg.as_uri()],
         check=True,
         capture_output=True,
     )

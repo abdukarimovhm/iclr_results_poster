@@ -1,15 +1,15 @@
 # ICLR 2027 results posters + my analysis
 
-This repo is a copy of [clareLab/posters](https://github.com/clareLab/posters) (MIT license, kept in [LICENSE](LICENSE)).
-The ICLR 2027 posters, their data pipelines and the summary tables are clareLab's work. On top of that I added my own
-analysis of the rebuttal phase in [`analysis/`](analysis/).
+Three posters on ICLR 2027 reviews (scores, institutions, rebuttal), plus my own analysis of the rebuttal phase in
+[`analysis/`](analysis/). The posters are rendered by me; their code and summary tables are adapted from
+[clareLab/posters](https://github.com/clareLab/posters) under the MIT license (both copyright notices are in [LICENSE](LICENSE)).
 
-- [clareLab's ICLR 2027 posters](#clarelabs-iclr-2027-posters)
+- [ICLR 2027 posters](#iclr-2027-posters)
 - [My analysis of the rebuttal phase](#my-analysis-of-the-rebuttal-phase)
 - [Repo layout](#repo-layout)
 - [Running things](#running-things)
 
-## clareLab's ICLR 2027 posters
+## ICLR 2027 posters
 
 All three are built from OpenReview (reviews) and OpenAlex (author affiliations). ICLR 2027 reviews use a 1–4 rating scale.
 
@@ -88,25 +88,31 @@ so it runs without the raw OpenReview data. All findings are in [`analysis/findi
 
 | Folder | What it is |
 |---|---|
-| `iclr2027-scores/`, `iclr2027-institutions/`, `iclr2027-rebuttal/` | clareLab's ICLR 2027 posters: fetch, stats and poster scripts, summary CSV/JSON tables, PNG/SVG posters |
+| `iclr2027-scores/`, `iclr2027-institutions/`, `iclr2027-rebuttal/` | The three posters: fetch, stats and poster scripts, summary CSV/JSON tables, PNG/SVG output |
 | `analysis/` | My analysis script, its charts and findings |
-| other folders (`allrankings*`, `cn-noreturn`, `jpemp`, …) | clareLab's other, non-ICLR posters, left as they were |
 
 ## Running things
 
-My analysis only needs pandas, matplotlib and scipy:
+Set up once:
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install pandas numpy matplotlib scipy
+python3 -m venv .venv && .venv/bin/pip install pandas numpy matplotlib scipy pillow segno pyarrow rapidfuzz
+```
+
+Re-render the posters from the committed `stats.json` files (needs Google Chrome or Chromium installed; no API keys):
+
+```bash
+.venv/bin/python iclr2027-scores/poster.py
+.venv/bin/python iclr2027-institutions/poster.py
+.venv/bin/python iclr2027-rebuttal/poster.py
+```
+
+Run my analysis:
+
+```bash
 .venv/bin/python analysis/rebuttal_analysis.py
 ```
 
-clareLab's pipelines use [uv](https://docs.astral.sh/uv/) and the `justfile` (for example `just iclr2027-rebuttal`). Their stats scripts need
-the raw OpenReview/OpenAlex snapshots under `~/Documents/data/posters/iclr2027/`, which are not in the repo; fetching them needs an
-OpenReview API key (`iclr2027-scores/fetch.py`) and an OpenAlex API key.
-
-To pull in new posters from the original repo:
-
-```bash
-git pull upstream main
-```
+Rebuilding the `stats.json` files themselves (the `stats.py`, `fetch.py` and `openalex.py` scripts, or the `justfile` recipes) needs
+the raw OpenReview/OpenAlex snapshots under `~/Documents/data/posters/iclr2027/`, which are not in the repo. Fetching them needs
+an OpenReview API key and an OpenAlex API key.

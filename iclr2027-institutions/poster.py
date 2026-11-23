@@ -2,15 +2,17 @@ import base64
 import json
 import math
 import pathlib
+import shutil
 import subprocess
 
 from PIL import Image, ImageFont
 
 HERE = pathlib.Path(__file__).parent
+BROWSER = shutil.which("chromium") or shutil.which("google-chrome") or "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 STATS = json.loads((HERE / "stats.json").read_text())
 COUNTRIES = json.loads((HERE / "countries.json").read_text())
 NAME = "iclr2027-institutions"
-URL = "https://github.com/clareLab/posters"
+URL = "https://github.com/abdukarimovhm/iclr_results_poster"
 HIDDEN = {"HK", "MO", "TW"}
 
 W, H = 7200, 9600
@@ -257,7 +259,7 @@ def masthead(c: Canvas) -> float:
     base += 64
     c.text(L, base, f"{OVERALL['institutions']:,} institutions in {OVERALL['countries']} countries, mean score {MEAN:.2f} against {OVERALL['mean_rest']:.2f} for the other submissions", 46, 400)
     base += 100
-    meta = [("Author", "clareLab", INK), ("Contact", "https://clarelab.moe", LINK), ("Date", "Nov 14, 2026", INK), ("Reviews", "OpenReview, Nov 6, 2026", INK), ("Affiliations", "OpenAlex, Nov 14, 2026", INK)]
+    meta = [("Author", "abdukarimovhm", INK), ("Contact", "https://github.com/abdukarimovhm", LINK), ("Date", "Nov 24, 2026", INK), ("Reviews", "OpenReview, Nov 6, 2026", INK), ("Affiliations", "OpenAlex, Nov 14, 2026", INK)]
     for i, (k, v, colour) in enumerate(meta):
         c.text(L, base + i * 54, k, 40, 400, fill=GREY)
         c.text(L + 250, base + i * 54, v, 40, 400, fill=colour)
@@ -587,7 +589,7 @@ def build(hidden: set) -> Canvas:
 def render(svg: pathlib.Path, png: pathlib.Path) -> None:
     for budget in (600000, 1200000, 2400000, 4800000):
         subprocess.run(
-            ["chromium", "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", f"--window-size={W},{H}", "--run-all-compositor-stages-before-draw", f"--virtual-time-budget={budget}", f"--screenshot={png}", svg.as_uri()],
+            [BROWSER, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", f"--window-size={W},{H}", "--run-all-compositor-stages-before-draw", f"--virtual-time-budget={budget}", f"--screenshot={png}", svg.as_uri()],
             check=True,
             capture_output=True,
         )

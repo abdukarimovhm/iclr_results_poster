@@ -3,16 +3,18 @@ import json
 import math
 import pathlib
 import re
+import shutil
 import subprocess
 
 import segno
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = pathlib.Path(__file__).parent
+BROWSER = shutil.which("chromium") or shutil.which("google-chrome") or "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 STATS = json.loads((HERE / "stats.json").read_text())
 COUNTRIES = json.loads((HERE / "countries.json").read_text())
 NAME = "iclr2027-rebuttal"
-URL = "https://github.com/clareLab/posters"
+URL = "https://github.com/abdukarimovhm/iclr_results_poster"
 HIDDEN = {"HK", "MO", "TW"}
 
 W, H = 7200, 9600
@@ -477,7 +479,7 @@ def pie(c: Canvas, x: float, y: float, r: float, parts: list) -> None:
 def masthead(c: Canvas) -> float:
     title = "ICLR 2027 Rebuttal"
     sub = "by Country and Institution"
-    meta = [("Author", "clareLab", INK), ("Contact", "https://clarelab.moe", LINK), ("Date", "Nov 19, 2026", INK), ("Reviews", "OpenReview, Nov 6 and Nov 19, 2026", INK), ("Affiliations", "OpenAlex, Nov 14, 2026", INK)]
+    meta = [("Author", "abdukarimovhm", INK), ("Contact", "https://github.com/abdukarimovhm", LINK), ("Date", "Nov 24, 2026", INK), ("Reviews", "OpenReview, Nov 6 and Nov 19, 2026", INK), ("Affiliations", "OpenAlex, Nov 14, 2026", INK)]
     defs = [("Submissions", "fractional count over affiliated authors and their institutions"), ("Initial", "mean rating at review release, Nov 6"), ("Final", "mean rating on Nov 19 of the open submissions"), ("Change", "final minus initial over the same open submissions"), ("Withdrawn", "share withdrawn by Nov 19"), ("Rebuttal", "share with at least one author comment"), ("Replied", "share of reviews whose reviewer posted at least one comment"), ("Raised", "rated higher on Nov 19 than on Nov 6")]
     scope = [
         f"{USED:,} of {BASE:,} rated submissions ({100 * USED / BASE:.1f}%) on arXiv before the reviews:",
@@ -1630,7 +1632,7 @@ def shoot(svg: pathlib.Path, folder: pathlib.Path, bands: list) -> list:
         page = folder / f"{svg.stem}-{k}.html"
         page.write_text(f'<!doctype html><html><head><style>html,body{{margin:0;overflow:hidden;background:#fff}}img{{position:absolute;left:0;top:{-k * step}px;width:{W}px;height:{H}px}}</style></head><body><img src="{svg.resolve().as_uri()}"></body></html>')
         shot = folder / f"{svg.stem}-{k}.png"
-        jobs.append((k, shot, subprocess.Popen(["chromium", "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", f"--window-size={W},{step}", "--run-all-compositor-stages-before-draw", "--virtual-time-budget=600000", f"--screenshot={shot}", page.resolve().as_uri()], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)))
+        jobs.append((k, shot, subprocess.Popen([BROWSER, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", f"--window-size={W},{step}", "--run-all-compositor-stages-before-draw", "--virtual-time-budget=600000", f"--screenshot={shot}", page.resolve().as_uri()], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)))
     for _, _, job in jobs:
         job.wait()
     return [(k, shot) for k, shot, _ in jobs]
