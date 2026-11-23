@@ -2,7 +2,8 @@
 
 Images in this folder:
 - `telegram-1-scores.png`, `telegram-2-institutions.png`, `telegram-3-rebuttal.png`: full posters, 1600 px wide. Send them as one album with the Telegram post.
-- `x-1-scores.png`, `x-2-institutions.png`, `x-3-rebuttal.png`: 4:5 crops of each poster's top part for the X thread.
+- `x-0-cover.png`: 16:9 cover for the main X post (title, three key numbers, thumbnails of all three posters). Rebuild it with `.venv/bin/python promo/cover.py`.
+- `x-1-scores.png`, `x-2-institutions.png`, `x-3-rebuttal.png`: 4:5 crops of each poster's top part for the replies in the X thread.
 
 ---
 
@@ -31,10 +32,10 @@ Data pipeline adapted from clareLab/posters (MIT).
 
 ## X thread
 
-Attach all three `x-*.png` crops to post 1, then `x-1-scores.png` to post 2, `x-2-institutions.png` to post 3 and `x-3-rebuttal.png` to post 4.
+Images: post 1 (the main post) gets `x-0-cover.png`; post 2 gets `x-1-scores.png`, post 3 `x-2-institutions.png`, post 4 `x-3-rebuttal.png`; post 5 has no image.
 Lengths (URL counted as 23): 238, 185, 221, 228, 210 characters.
 
-**Post 1**
+**Post 1** (main post, attach `x-0-cover.png`)
 
 I rebuilt three data posters on ICLR 2027 peer review: scores, who submits, and what the rebuttal changed.
 
@@ -43,7 +44,7 @@ https://github.com/abdukarimovhm/iclr_results_poster
 
 🧵 Key findings
 
-**Post 2**
+**Post 2** (attach `x-1-scores.png`)
 
 1/ Scores
 
@@ -51,7 +52,7 @@ Reviewers are tough: 57.5% of all ratings were a 2 (on a 1–4 scale). The media
 
 Only 15% of papers reached an average of 2.67, and just 4% reached 3.00.
 
-**Post 3**
+**Post 3** (attach `x-2-institutions.png`)
 
 2/ Who submits
 
@@ -59,7 +60,7 @@ Of the 10,520 papers I could trace to institutions, China (33%) and the US (32%)
 
 The biggest institutions sit right on the average. Bigger is not better.
 
-**Post 4**
+**Post 4** (attach `x-3-rebuttal.png`)
 
 3/ The rebuttal
 
