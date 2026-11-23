@@ -94,6 +94,8 @@ so it runs without the raw OpenReview data. All findings are in [`analysis/findi
 | `posters/` | My poster code: `style.py` (shared look), `scores.py`, `institutions.py`, `rebuttal.py`; output in `posters/out/` |
 | `iclr2027-scores/`, `iclr2027-institutions/`, `iclr2027-rebuttal/` | Data pipelines (fetch and stats scripts) and the summary CSV/JSON tables the posters read |
 | `analysis/` | My analysis script, its charts and findings |
+| `.claude/skills/results-posters/` | A Claude skill on how to make posters like these, covering both my HTML-cards approach and clareLab's original SVG-canvas approach, with a starter kit |
+| `promo/` | Telegram and X post drafts with social-sized poster images |
 
 ## Running things
 
