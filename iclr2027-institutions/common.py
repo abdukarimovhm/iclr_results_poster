@@ -11,7 +11,7 @@ ROOT = pathlib.Path.home() / "Documents/data/posters/iclr2027"
 OPENREVIEW = ROOT / "openreview"
 OPENALEX = ROOT / "openalex"
 KEY = pathlib.Path.home() / "Documents/data/openalex-api-key"
-AGENT = "clareLab posters"
+AGENT = "iclr_results_poster"
 
 
 def key(title: str) -> str:

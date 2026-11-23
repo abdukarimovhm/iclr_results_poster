@@ -14,7 +14,7 @@ TOKEN = pathlib.Path.home() / "Documents/data/openreview-api-key"
 
 
 def crawl(stamp: str, pace: float, size: int = 500) -> None:
-    headers = {"Authorization": f"Bearer {TOKEN.read_text().strip()}", "User-Agent": "clareLab posters"}
+    headers = {"Authorization": f"Bearer {TOKEN.read_text().strip()}", "User-Agent": "iclr_results_poster"}
     store = DATA / stamp
     store.mkdir(parents=True, exist_ok=True)
     page = len(list(store.glob("page-*.parquet")))
